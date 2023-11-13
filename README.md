@@ -1,2 +1,2 @@
 # EDU
-Learning
+Educational resources and useful tools.
