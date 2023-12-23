@@ -2,6 +2,8 @@
 The execution of a compiled binary can be examined or entirely changed if we compile a shared libary that contains functions with the same names, and then  
 use `LD_PRELOAD` to have this library loaded as an environment variable for the executable. Take a really basic example below. 
 
+![babies_first_hook](https://github.com/cas1m1r/EDU/blob/main/Linux/hooked.gif?raw=true)
+
 ## Introduction to Hooks
 Here is a really simple function, saved as badlogin.c. It checks if the user has provided (as an argument input) a string which matches a harcoded password. 
 In this case a reverse engineer would easily be able to reverse the program to see the string, but that would be done with "static analysis". That's a process 
