@@ -124,8 +124,8 @@ the correct file for reading though:
 ![missingNull](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/openFlagNoNullTermination.png)
 
 
-Ahh intersting, the filename is getting mangled somehow. Well flag.txt is 8 bytes,
-and at 9th we have a f instead of a null byte. Well f in hex is 0x66, so lets just subtract that value:
+Ahh interesting, the filename is getting mangled somehow. Well 'flag.txt' is 8 bytes,
+and at 9th byte we can see from strace that we have an f instead of a null byte. ASCII 'f' in hex is 0x66, so lets just subtract that value:
 
 ![fopen](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/FixingFileOpen.png)
 
