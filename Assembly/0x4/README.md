@@ -32,7 +32,7 @@ independent. Since we have no control of whats happening before our code is inje
 so as to not care about things like hardcoded or specific offsets in memory which will change randomly. 
 
 Shellcode must also have null bytes removed, otherwise our stream of bits will have a NULL termination somewhere in it and 
-will be incorrectly treated as a [string](https://bista.sites.dmi.unipg.it/didattica/sicurezza-pg/buffer-overrun/hacking-book/0x2a0-writing_shellcode.html&ved=2ahUKEwi0germhZOGAxVkkIkEHQFwA0sQFnoECA4QAw&usg=AOvVaw3fNBPqA9-I-586T-RSG7tE)
+will be incorrectly treated as a [string](https://bista.sites.dmi.unipg.it/didattica/sicurezza-pg/buffer-overrun/hacking-book/0x2a0-writing_shellcode.html)
 
 I write a small shell script for testing out different Assembly, take the compiled output and remove the NULL bytes,
 write this data to a "payload" file, and then pipe that payload into the vuln1 program:
