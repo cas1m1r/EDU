@@ -35,7 +35,7 @@ Shellcode must also have null bytes removed, otherwise our stream of bits will h
 will be incorrectly treated as a [string](https://bista.sites.dmi.unipg.it/didattica/sicurezza-pg/buffer-overrun/hacking-book/0x2a0-writing_shellcode.html&ved=2ahUKEwi0germhZOGAxVkkIkEHQFwA0sQFnoECA4QAw&usg=AOvVaw3fNBPqA9-I-586T-RSG7tE)
 
 I write a small shell script for testing out different Assembly, take the compiled output and remove the NULL bytes,
-write this data to a "payload" file, and then pip that payload into the vuln1 program:
+write this data to a "payload" file, and then pipe that payload into the vuln1 program:
 
 ```bash
 #!/bin/bash
@@ -58,11 +58,11 @@ cat payload | strace ./$targetBinary
 #EOF
 ```
 
-Alright before reading a flag maybe lets try something simple, like.... printing a message to the console? 
+Before reading a flag maybe lets try something simple, like.... printing a message to the console? 
 We wrote code for echoing user supplied arguments in 0x1, but this is a bit different (also 64bit now). 
 
 First thing we need to do is move the bytes of our message into memory. The write syscall is exepecting 
-a pointer to be in rdi, to this message. The rdx register needs the length of our output. 
+a pointer to our message to be in rdi. The rdx register needs to hold the length of our output. 
 We also need to put out file descriptor for STDOUT (just 1) into rbx, and then move the value for the WRITE
 syscall into rax. So can we try this?: 
 ```nasm
@@ -91,14 +91,19 @@ _start:
 
 ![echooo](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/helloShell.png)
 
+By the way to figure out which registers need which arguments for every syscall you can find a table like this 
 
-Awesome it worked! Okay so how about trying to read a flag or something?... more syscall xD 
+![syscalls](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/syscall_conventions.png)
 
-This one required a bit of thinking, because unlike the cat.asm program in 0x2 we cant setup
-a local buffer to read into. But at least we already know how to move the a given string around! 
+from a website like [this](https://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/)
 
-So first we meed to move the name of the file "flag.txt" into memory, and open it. That should be similar to the cat.asm program
-but slightly borrowing from what we just did? 
+Awesome it worked! Okay so how about trying to read a flag or something?... more syscalls xD 
+
+This one required a bit of thinking, because unlike the cat.asm program in 0x2 we can't setup
+a local buffer to read into.  
+
+First we meed to move the name of the file "flag.txt" into memory, and open it (Remember our byte order must be reversed because of how data is stored and read from the stack). 
+That should be similar to the cat.asm program but slightly borrowing from what we just did: 
 ```nasm
 _start: 
 	xor rdi, rdi
@@ -107,7 +112,7 @@ _start:
 	mov [rdx], rsi
 	xchg rdi, rdx
 ```
-So we already have our filename now in rdi! Now we just need to move the READ syscall number (2) into RAX and the file permissions mask into RDX
+So we already have our filename now in rdi, now we just need to move the READ syscall number (2) into RAX and the file permissions mask into RDX
 ```nasm
 	add al, 2
 	xor rsi, rsi 
@@ -125,12 +130,6 @@ and at 9th we have a f instead of a null byte. Well f in hex is 0x66, so lets ju
 ![fopen](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/FixingFileOpen.png)
 
 **AWESOME IT WORKED!** 
-
-By the way to figure out which registers need which arguments for every syscall you can find a table like this 
-
-![syscalls](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/syscall_conventions.png)
-
-from a website like [this](https://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/)
 
 So it looks like now we need to move the pointer to the file we just opened into rdi. Well using GDB I can see that its left in rax after the syscall.
 Because we can't create a local buffer we could just use the space of the filename we created to hold the contents of what we read from the file?
