@@ -133,27 +133,26 @@ and at 9th byte we can see from strace that we have an f instead of a null byte.
 
 So it looks like now we need to move the pointer to the file we just opened into rdi. Well using GDB I can see that its left in rax after the syscall.
 Because we can't create a local buffer we could just use the space of the filename we created to hold the contents of what we read from the file?
-So lets move that for the stack into rsi. Finally we need to move the length of the message into rdx (we made the flag file so we know its 27 bytes): 
+So lets move that from the stack (rsp) into rsi. Finally we need to move the length of the message into rdx (we made the flag file so we know its 27 bytes): 
 
 ![fileRead](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/FileRead.png)
 
 **AYYY IT WORKED!** 
 
-Okay now we just need to print the result! We can do that with the write syscall, which expects rdi to have pointer file (in this case STDOUT or 1).
-
+Okay now we just need to print the result! We can do that with the write syscall, which expects rdi to have file descriptor of where to write (in this case STDOUT or 1).
 
 Lets take a look at how we can debug this from GDB, here we can see the disassembly of the vuln1 main function:
 
 ![disass](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/disassMain.png) 
 
-And also set a breakpoint for where our code will be called. We can run out program and pipe in the results from "payload" file using this syntax:
+also we cam set a breakpoint for where our code will be called (seen above). Then lets run our program and pipe in the results from "payload" file using this syntax:
 `r < payload` in the GDB terminal.
 
-From here we can use stepi once to hop into our shellcode! 
+From here we can use stepi once to hop into and through our shellcode one instruction at a time! 
 
 ![gdb](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/StepIn.png)
 
-Okay now lets trying to use this visibilty to figure out how we can close the loop and actually write the contents of this flag file out. 
+lets use this visibilty to figure out how we can close the loop and actually write the contents of this flag file out. 
 Stepping through our shellcode we can see that after the READ syscall we have the flag contents in RSI, which is already where we need our pointer to be for the WRITE CALL! 
 The size is already in RDX from the READ call (which is the same place as WRITE), so all we need to do is:
 	- Adjust RAX to be 1 for the WRITE syscall
