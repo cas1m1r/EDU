@@ -89,7 +89,7 @@ _start:
 *Lets try out our testshell script and save this as echo.asm:*
 
 
-
+![echooo](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/helloShell.png)
 
 
 Awesome it worked! Okay so how about trying to read a flag or something?... more syscall xD 
@@ -116,20 +116,19 @@ So we already have our filename now in rdi! Now we just need to move the READ sy
 If were to just add an exit after this we should be able to see in strace whether we've opened 
 the correct file for reading though: 
 
+![missingNull](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/openFlagNoNullTermination.png)
+
+
 Ahh intersting, the filename is getting mangled somehow. Well flag.txt is 8 bytes,
 and at 9th we have a f instead of a null byte. Well f in hex is 0x66, so lets just subtract that value:
 
+![fopen](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/FixingFileOpen.png)
 
 **AWESOME IT WORKED!** 
 
 By the way to figure out which registers need which arguments for every syscall you can find a table like this 
 
-
-
-
-
-
-
+![syscalls](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/syscall_conventions.png)
 
 from a website like [this](https://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/)
 
@@ -137,13 +136,7 @@ So it looks like now we need to move the pointer to the file we just opened into
 Because we can't create a local buffer we could just use the space of the filename we created to hold the contents of what we read from the file?
 So lets move that for the stack into rsi. Finally we need to move the length of the message into rdx (we made the flag file so we know its 27 bytes): 
 
-
-
-
-
-
-
-
+![fileRead](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/FileRead.png)
 
 **AYYY IT WORKED!** 
 
@@ -152,20 +145,14 @@ Okay now we just need to print the result! We can do that with the write syscall
 
 Lets take a look at how we can debug this from GDB, here we can see the disassembly of the vuln1 main function:
 
+![disass](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/disassMain.png) 
 
 And also set a breakpoint for where our code will be called. We can run out program and pipe in the results from "payload" file using this syntax:
 `r < payload` in the GDB terminal.
 
 From here we can use stepi once to hop into our shellcode! 
 
-
-
-
-
-
-
-
-
+![gdb](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/StepIn.png)
 
 Okay now lets trying to use this visibilty to figure out how we can close the loop and actually write the contents of this flag file out. 
 Stepping through our shellcode we can see that after the READ syscall we have the flag contents in RSI, which is already where we need our pointer to be for the WRITE CALL! 
@@ -173,4 +160,8 @@ The size is already in RDX from the READ call (which is the same place as WRITE)
 	- Adjust RAX to be 1 for the WRITE syscall
 	- change the file descriptor in RDI to 1 now because we want to write to STDOUT (before we read from an actual file)
 
+![soClose](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/SoClose.png) 
+
 well looking at GDB we can see RAX is 0x1b, so lets just subtract 0x1a. And then we can move 1 into rdi. And Voila!
+
+![yay](https://raw.githubusercontent.com/cas1m1r/EDU/main/Assembly/0x4/success.png)
