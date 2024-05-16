@@ -1,0 +1,22 @@
+#!/bin/bash
+
+binaryPayload=$1
+targetBinary=$2
+
+
+nasm -f elf64 $1 -o runme.o
+ld -s runme.o -o runme
+rm runme.o
+
+shellcode=$(objdump -d runme | grep -Po '\s\K[a-f0-9]{2}(?=\s)' | sed 's/^/\\x/g' | perl -pe 's/\r?\n//' | sed 's/$/\n/')
+
+
+echo 'open("payload","wb").write(b'"'"$shellcode"'"')' >> maker.py
+python3 maker.py 
+rm maker.py
+
+
+# If given a target binary we can then run ./strace <target> < payload
+cat payload | strace ./$targetBinary
+
+#EOF
